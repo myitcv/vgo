@@ -19,6 +19,7 @@ import (
 	"cmd/go/internal/bug"
 	"cmd/go/internal/cfg"
 	"cmd/go/internal/clean"
+	"cmd/go/internal/deplist"
 	"cmd/go/internal/doc"
 	"cmd/go/internal/envcmd"
 	"cmd/go/internal/fix"
@@ -56,6 +57,7 @@ func init() {
 		vgo.CmdVerify,
 		version.CmdVersion,
 		vet.CmdVet,
+		deplist.CmdDeplist,
 
 		help.HelpBuildmode,
 		help.HelpC,

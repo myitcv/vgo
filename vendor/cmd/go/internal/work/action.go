@@ -403,6 +403,32 @@ func (b *Builder) VetAction(mode, depMode BuildMode, p *load.Package) *Action {
 	return a
 }
 
+// DeplistAction returns the action for running go deplist on package p.
+// It depends on the action for compiling p.
+// If the caller may be causing p to be installed, it is up to the caller
+// to make sure that the install depends on (runs after) deplist.
+func (b *Builder) DeplistAction(mode, depMode BuildMode, p *load.Package) *Action {
+	// Construct deplist action.
+	a := b.cacheAction("deplist", p, func() *Action {
+		a1 := b.CompileAction(mode, depMode, p)
+
+		a := &Action{
+			Mode:    "deplist",
+			Package: p,
+			Deps:    []*Action{a1},
+			Objdir:  a1.Objdir,
+		}
+		if a1.Func == nil {
+			// Built-in packages like unsafe.
+			return a
+		}
+		a.Func = (*Builder).deplist
+
+		return a
+	})
+	return a
+}
+
 // LinkAction returns the action for linking p into an executable
 // and possibly installing the result (according to mode).
 // depMode is the action (build or install) to use when compiling dependencies.

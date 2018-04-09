@@ -761,6 +761,43 @@ func (b *Builder) vet(a *Action) error {
 	return b.run(a, p.Dir, p.ImportPath, env, cfg.BuildToolexec, tool, VetFlags, a.Objdir+"vet.cfg")
 }
 
+func (b *Builder) deplist(a *Action) error {
+	// a.Deps[0] is the build of the package being deplistted.
+
+	p := a.Deps[0].Package
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "\t")
+
+	failed := false
+
+	c := cache.Default()
+	ca, err := c.Get(a.Deps[0].actionID)
+	if err != nil {
+		failed = true
+	}
+
+	details := struct {
+		ImportPath  string
+		PackageFile string
+		Incomplete  bool
+	}{
+		ImportPath: p.ImportPath,
+	}
+
+	if !failed {
+		details.PackageFile = c.OutputFile(ca.OutputID)
+	} else {
+		details.Incomplete = true
+	}
+
+	if err := enc.Encode(details); err != nil {
+		return fmt.Errorf("failed to JSON encode package: %v", err)
+	}
+
+	return nil
+}
+
 // linkActionID computes the action ID for a link action.
 func (b *Builder) linkActionID(a *Action) cache.ActionID {
 	p := a.Package
